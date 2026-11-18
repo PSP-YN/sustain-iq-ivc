@@ -1,0 +1,18 @@
+# Chrome / Edge temp profiles and caches
+chrome_temp/
+.chrome_temp/
+chrome_profile/
+.edge_temp/
+
+# Node & logs
+node_modules/
+*.log
+
+# Temporary test captures & debug scripts
+/*.png
+step548_full.txt
+step548_rep.txt
+
+# OS metadata
+.DS_Store
+Thumbs.db

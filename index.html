@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUSTAIN-IQ 2026</title>
+  
+  <!-- Pixel & Monospace Fonts for true Minecraft/Retro Voxel Aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      background-color: #000;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: auto;
+    }
+
+    body {
+      background-color: #000;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Silkscreen', 'JetBrains Mono', monospace;
+    }
+
+    /* Minimalist sleek scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #000;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a2a2a;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    /* ==========================================================================
+       1. HERO SECTION (Fixed Canvas + 3D Zooming Logo)
+       ========================================================================== */
+    #hero-track {
+      position: relative;
+      width: 100%;
+      height: 440vh; /* Set dynamically in updateDimensions() */
+    }
+
+    #hero-sticky {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 1;
+      background-color: #000;
+      pointer-events: none;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+    }
+
+    /* Exact dead-center logo container */
+    .logo-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateZ(0);
+      transform-origin: center center;
+      z-index: 10;
+      pointer-events: none;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-logo {
+      display: block;
+      width: clamp(380px, 48vw, 760px);
+      max-width: 90vw;
+      height: auto;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    /* ==========================================================================
+       2. ABOUT SECTION (Continuous Vertical Surface Flow over Hero)
+       ========================================================================== */
+    #about {
+      position: relative;
+      z-index: 10;
+      min-height: 105vh;
+      width: 100%;
+      overflow: visible;
+      box-shadow: 0 -25px 60px rgba(0, 0, 0, 0.75);
+    }
+
+    /* 3D Perspective Stage (perspective: 1200px) */
+    .about-stage {
+      position: relative;
+      width: 100%;
+      min-height: 105vh;
+      height: 105vh;
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      overflow: visible;
+    }
+
+    /* 3D World Container (receives cursor tilt and preserved depth) */
+    .about-world {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    /* --------------------------------------------------------------------------
+       Z-Plane 1: Natural Blue Minecraft Sky Background (z-index: 1)
+       Clipped so it ends right behind the grass/dirt horizon and never peeks below
+       -------------------------------------------------------------------------- */
+    .layer-sky {
+      position: absolute;
+      top: -6%;
+      left: -10%;
+      width: 120%;
+      height: 76%; /* Ends right behind the grass/dirt horizon */
+      object-fit: cover;
+      object-position: center top;
+      z-index: 1;
+      transform: translate3d(0, 0, -100px) scale(1.15);
+      pointer-events: none;
+      will-change: transform;
+      mask-image: linear-gradient(to bottom, #000 68%, transparent 96%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 68%, transparent 96%);
+    }
+
+    /* --------------------------------------------------------------------------
+       Island Composite Container
+       -------------------------------------------------------------------------- */
+    .island-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60vh;
+      transform-style: preserve-3d;
+      pointer-events: none;
+      z-index: 3;
+      will-change: transform;
+    }
+
+    /* Z-Plane 5: Rocky Overhang Cliff Base with Stalactites */
+    .layer-cliff-base {
+      position: absolute;
+      bottom: -9.5vw;
+      left: 0;
+      width: 100%;
+      height: auto;
+      z-index: 5;
+      filter: drop-shadow(0 15px 24px rgba(0,0,0,0.55));
+      pointer-events: none;
+      will-change: transform;
+      transform: translate3d(0, 0, 30px) scale(1.02);
+    }
+
+    /* Z-Plane 3: Island Top — Forest Island Trees & Grass
+       Positioned so its BOTTOM rests directly ON TOP of the cliff cross-section */
+    .layer-forest-top {
+      position: absolute;
+      bottom: 9.6vw; /* Bottom of forest island connects seamlessly on top of cliff */
+      left: 0;
+      width: 100%;
+      height: auto;
+      z-index: 3;
+      pointer-events: none;
+      will-change: transform;
+      transform: translate3d(0, 0, 25px) scale(1.02);
+    }
+
+    /* --------------------------------------------------------------------------
+       Z-Plane 4: Animated 3D-Floating Bee (z-index: 4)
+       Hovering just to the left of the parchment card, matching reference image
+       -------------------------------------------------------------------------- */
+    .layer-bee {
+      position: absolute;
+      left: max(4%, calc(50% - 28vw));
+      top: 50%;
+      width: clamp(48px, 5.2vw, 78px);
+      height: auto;
+      z-index: 4;
+      filter: drop-shadow(6px 14px 10px rgba(0,0,0,0.45));
+      pointer-events: none;
+      will-change: transform;
+      transform: translate3d(0, 0, 45px);
+    }
+
+    /* --------------------------------------------------------------------------
+       Z-Plane 5: Extruded 3D Pixel Headline (z-index: 5)
+       Positioned at top: 3.2vh, large bold white pixel text as in reference
+       -------------------------------------------------------------------------- */
+    .layer-headline {
+      position: absolute;
+      top: 3.2vh;
+      left: 50%;
+      transform: translate3d(-50%, 0, 50px);
+      z-index: 5;
+      margin: 0;
+      padding: 0 16px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Silkscreen', 'Press Start 2P', monospace;
+      font-size: clamp(1.2rem, 2.6vw, 2.3rem);
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: 1.5px;
+      text-shadow: 
+        0 2px 0 #2b2b2b, 
+        0 4px 0 #1f1f1f, 
+        0 6px 0 #121212, 
+        0 12px 20px rgba(0,0,0,0.7);
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    /* --------------------------------------------------------------------------
+       Z-Plane 6: Pop-Out Parchment Scroll Card (z-index: 6)
+       Reduced scale so it clears the headline above and rests cleanly on grass
+       -------------------------------------------------------------------------- */
+    .layer-parchment-wrapper {
+      position: absolute;
+      left: 50%;
+      top: 48vh;
+      transform: translate3d(-50%, -50%, 65px);
+      width: clamp(320px, 44vw, 580px);
+      max-width: 88vw;
+      z-index: 6;
+      filter: drop-shadow(0 20px 28px rgba(0,0,0,0.6));
+      will-change: transform;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .parchment-bg {
+      width: 100%;
+      height: auto;
+      display: block;
+      pointer-events: none;
+    }
+
+    .parchment-text-container {
+      position: absolute;
+      inset: 12% 11%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .parchment-text {
+      margin: 0;
+      font-family: 'Silkscreen', 'JetBrains Mono', monospace;
+      color: #2B180A;
+      font-weight: 700;
+      line-height: 1.55;
+      font-size: clamp(0.72rem, 1.0vw, 0.90rem);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+      letter-spacing: 0.1px;
+    }
+
+    @media (max-width: 640px) {
+      .layer-parchment-wrapper {
+        top: 46vh;
+        width: 92vw;
+      }
+      .parchment-text-container {
+        inset: 12% 9%;
+      }
+      .parchment-text {
+        font-size: 0.72rem;
+        line-height: 1.45;
+      }
+      .layer-headline {
+        top: 2vh;
+        font-size: 1.0rem;
+      }
+      .layer-bee {
+        left: 2%;
+        top: 46%;
+        width: 48px;
+      }
+    }
+
+    /* ==========================================================================
+       3. UNDERGROUND CAVERN SECTION (Bedrock + Why SustainIQ? + Banner Grid)
+       ========================================================================== */
+    #cavern {
+      position: relative;
+      z-index: 4;
+      width: 100%;
+      min-height: 140vh;
+      margin-top: -18%; /* Pull bedrock up behind floating voxel island cross section */
+      padding-bottom: 6rem; /* Clean breathing room for next underground section */
+      background-color: #121216;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+    .cavern-stage {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      overflow: visible;
+    }
+
+    .cavern-world {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    /* Deep Cavern Background: bedrock.webp (z-index: 1, translateZ(-40px) scale(1.06)) */
+    .cavern-bedrock-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      z-index: 1;
+      transform: translateZ(-40px) scale(1.06);
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    /* Z-Plane 2: Cavern Side Walls with Torches & Ores (Framing Left & Right) */
+    .cavern-walls-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      z-index: 2;
+      pointer-events: none;
+      transform: translateZ(15px);
+      filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+      will-change: transform;
+    }
+
+    /* Section Heading (z-index: 3, pushed downward below lowest stalactite tip) */
+    .cavern-heading {
+      position: relative;
+      z-index: 3;
+      padding-top: clamp(480px, 28vw, 560px); /* Cleanly below lowest hanging stalactite tip */
+      margin: 0 0 2rem 0;
+      text-align: center;
+      font-family: 'Press Start 2P', 'Silkscreen', monospace;
+      font-size: clamp(1.4rem, 3.0vw, 2.6rem);
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: 2px;
+      text-shadow: 
+        0 4px 0 #1a1a1a, 
+        0 0 24px rgba(255, 190, 60, 0.55);
+      transform: translateZ(10px);
+      will-change: transform;
+    }
+
+    /* Cave Scroll Banner (z-index: 4, translateZ(20px)) */
+    .cavern-banner-wrapper {
+      position: relative;
+      width: min(92vw, 860px);
+      margin: 1.8rem auto 0;
+      z-index: 4;
+      transform: translateZ(20px);
+      filter: drop-shadow(0 20px 28px rgba(0,0,0,0.75));
+      will-change: transform;
+    }
+
+    .cavern-banner-bg {
+      width: 100%;
+      height: auto;
+      display: block;
+      pointer-events: none;
+    }
+
+    .cavern-banner-content {
+      position: absolute;
+      inset: 14% 12%; /* Inset safely inside stone arch frame and away from lanterns */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.85rem 1.15rem;
+      width: 100%;
+    }
+
+    .highlight-card {
+      background: rgba(244, 217, 160, 0.92);
+      border: 3px solid #3A2212;
+      border-radius: 4px;
+      padding: 0.70rem 0.90rem;
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.45), 
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .highlight-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 18px rgba(0, 0, 0, 0.6), 
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .highlight-title {
+      font-family: 'Silkscreen', monospace;
+      font-size: clamp(0.68rem, 0.95vw, 0.84rem);
+      font-weight: 700;
+      color: #2B180A;
+      margin: 0 0 0.25rem 0;
+      letter-spacing: 0.2px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .highlight-title::before {
+      content: '⛏';
+      font-size: 0.82em;
+      opacity: 0.85;
+      color: #8C4A19;
+    }
+
+    .highlight-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.64rem, 0.85vw, 0.78rem);
+      font-weight: 600;
+      line-height: 1.45;
+      color: #2B180A;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      #cavern {
+        margin-top: -18%;
+      }
+      .cavern-heading {
+        padding-top: clamp(260px, 34vw, 320px);
+        font-size: 1.25rem;
+      }
+      .cavern-banner-content {
+        inset: 12% 9%;
+      }
+      .highlights-grid {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+      }
+      .highlight-card {
+        padding: 0.55rem 0.75rem;
+      }
+      .highlight-title {
+        font-size: 0.68rem;
+      }
+      .highlight-desc {
+        font-size: 0.62rem;
+        line-height: 1.35;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. HERO SECTION (Sticky 100vh viewport inside 480vh scroll runway)
+       ======================================================================== -->
+  <div id="hero-track">
+    <div id="hero-sticky">
+      <div class="logo-container" id="logoContainer">
+        <img src="logo/logo-baked.png" alt="SUSTAIN-IQ Logo" class="brand-logo" id="brandLogo" />
+      </div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. ABOUT SECTION (Stacked Island Architecture Matching Reference)
+       ======================================================================== -->
+  <section id="about" class="about-section">
+    <div class="about-stage" id="aboutStage">
+      <div class="about-world" id="aboutWorld">
+        
+        <!-- Z-Plane 1: Natural Blue Minecraft Sky Background (Clouds & Sunbeams) -->
+        <img 
+          src="assets/amethyst-design-sky-CVJIhP7p.webp" 
+          alt="Minecraft Sky Background" 
+          class="layer-sky" 
+          id="layerSky"
+        />
+
+        <!-- Island Composite: Bottom of Forest Island Placed On Top of Cliff Cross-Section -->
+        <div class="island-container" id="islandContainer">
+          <!-- Z-Plane 2: Island Base Stone Cliff Cross-Section -->
+          <img 
+            src="assets/floating-voxel-island-cross-section-BtuZU1Az.webp" 
+            alt="Voxel Island Stone Cliff Base" 
+            class="layer-cliff-base" 
+            id="layerCliffBase"
+          />
+
+          <!-- Z-Plane 3: Island Top Forest Trees & Grass (Bottom sits on top of cliff) -->
+          <img 
+            src="assets/forest-island-current-W9KxXGzR.webp" 
+            alt="Forest Trees and Grass" 
+            class="layer-forest-top" 
+            id="layerForestTop"
+          />
+        </div>
+
+        <!-- Z-Plane 4: Animated 3D-Floating Bee (Hovering to the left of the parchment) -->
+        <img 
+          src="assets/morning-bee-BSFy0Spy.gif" 
+          alt="Morning Bee" 
+          class="layer-bee" 
+          id="layerBee"
+        />
+
+        <!-- Z-Plane 5: Extruded 3D Pixel Headline (Centered at top) -->
+        <h2 class="layer-headline" id="layerHeadline">Mine Ideas, Craft the Future.</h2>
+
+        <!-- Z-Plane 6: Pop-Out Parchment Scroll Card (Centered midground, resting on grass) -->
+        <div class="layer-parchment-wrapper" id="layerParchment">
+          <img 
+            src="assets/parchment_card-C6HGbFMJ.webp" 
+            alt="Parchment Card" 
+            class="parchment-bg" 
+          />
+          <div class="parchment-text-container">
+            <p class="parchment-text">
+              SUSTAIN-IQ 2026 is a 24-hour national-level multidisciplinary sustainability hackathon organized by the Innovators & Visionaries Club (IVC) at Vidyavardhaka College of Engineering, Mysuru, in collaboration with inunity. Unite with 80 finalist teams across 4 challenge domains to engineer practical, measurable solutions for people and the planet.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       3. UNDERGROUND CAVERN SECTION (Bedrock + Why SustainIQ? + Banner Grid)
+       ======================================================================== -->
+  <section id="cavern" class="cavern-section">
+    <div class="cavern-stage" id="cavernStage">
+      <div class="cavern-world" id="cavernWorld">
+
+        <!-- Z-Plane 1: Deep Cavern Bedrock Background -->
+        <img 
+          src="assets/2/bedrock.webp" 
+          alt="Deep Bedrock Wall" 
+          class="cavern-bedrock-bg" 
+          id="cavernBedrock"
+        />
+
+        <!-- Z-Plane 2: Cavern Side Walls with Torches & Ores (Framing Left & Right) -->
+        <img 
+          src="assets/2/amethyst-design-walls-MWl9p3OZ.webp" 
+          alt="Cavern Wall Framing with Torches and Ores" 
+          class="cavern-walls-overlay" 
+          id="cavernWalls"
+        />
+
+        <!-- Z-Plane 3: Glowing Pixel Section Heading -->
+        <h2 class="cavern-heading" id="cavernHeading">Why SustainIQ?</h2>
+
+        <!-- Z-Plane 4: Cave Scroll Banner with 6 Highlights -->
+        <div class="cavern-banner-wrapper" id="cavernBanner">
+          <img 
+            src="assets/2/cave-scroll-banner-BDSRE0tD.webp" 
+            alt="Cave Scroll Banner" 
+            class="cavern-banner-bg" 
+          />
+          <div class="cavern-banner-content">
+            <div class="highlights-grid">
+
+              <div class="highlight-card">
+                <h3 class="highlight-title">National-Level Exposure</h3>
+                <p class="highlight-desc">Connect with innovators from institutions across India.</p>
+              </div>
+
+              <div class="highlight-card">
+                <h3 class="highlight-title">Cross-Disciplinary Teams</h3>
+                <p class="highlight-desc">Different branches and colleges build together.</p>
+              </div>
+
+              <div class="highlight-card">
+                <h3 class="highlight-title">Practical Challenges</h3>
+                <p class="highlight-desc">Real sustainability problems across 4 domains with clear impact.</p>
+              </div>
+
+              <div class="highlight-card">
+                <h3 class="highlight-title">Guided Development</h3>
+                <p class="highlight-desc">Mandatory mentoring checkpoints to sharpen your prototype.</p>
+              </div>
+
+              <div class="highlight-card">
+                <h3 class="highlight-title">Recognition &amp; Awards</h3>
+                <p class="highlight-desc">Compete for a &#8377;60,000 total prize pool across 12 winning positions.</p>
+              </div>
+
+              <div class="highlight-card">
+                <h3 class="highlight-title">24-Hour Build Experience</h3>
+                <p class="highlight-desc">Full on-site build at VVCE Sports Complex with all meals &amp; midnight snacks provided.</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       ENGINE SCRIPT: Scroll Controller, Canvas Scrub, 3D Tilt & Parallax Engine
+       ======================================================================== -->
+  <script>
+    (function () {
+      // ------------------------------------------------------------------------
+      // Hero Canvas Setup & Image Preloading
+      // ------------------------------------------------------------------------
+      const TOTAL_FRAMES = 178;
+      const FOLDER = 'Characters_collaborating_in_voxe_b3c6a02d_1080p-ezgif-split';
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+      const heroTrack = document.getElementById('hero-track');
+      const heroSticky = document.getElementById('hero-sticky');
+      const logoContainer = document.getElementById('logoContainer');
+      const aboutSection = document.getElementById('about');
+      const aboutWorld = document.getElementById('aboutWorld');
+
+      // About Layers
+      const layerSky = document.getElementById('layerSky');
+      const islandContainer = document.getElementById('islandContainer');
+      const layerCliffBase = document.getElementById('layerCliffBase');
+      const layerForestTop = document.getElementById('layerForestTop');
+      const layerBee = document.getElementById('layerBee');
+      const layerHeadline = document.getElementById('layerHeadline');
+      const layerParchment = document.getElementById('layerParchment');
+
+      // Cavern Layers
+      const cavernSection = document.getElementById('cavern');
+      const cavernWorld = document.getElementById('cavernWorld');
+      const cavernBedrock = document.getElementById('cavernBedrock');
+      const cavernWalls = document.getElementById('cavernWalls');
+      const cavernHeading = document.getElementById('cavernHeading');
+      const cavernBanner = document.getElementById('cavernBanner');
+
+      const isDirectAbout = window.location.search.includes('about') || window.location.hash === '#about';
+
+      const images = new Array(TOTAL_FRAMES);
+      let targetScroll = window.scrollY;
+      let currentScroll = window.scrollY;
+      let lastDrawnFrame = -1;
+      let maxScroll = 1;
+
+      // Dynamic runway distances
+      let heroScrubDist = 0;
+      let aboutSlideDist = 0;
+
+      // Pre-cached cover geometry
+      let coverW = 0, coverH = 0, coverX = 0, coverY = 0;
+
+      function getFrameSrc(index) {
+        const num = String(index + 1).padStart(3, '0');
+        return `${FOLDER}/ezgif-frame-${num}.jpg`;
+      }
+
+      function updateDimensions() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'medium';
+
+        // Precompute 16:9 cover dimensions
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const imgRatio = 1920 / 1080;
+        const canvasRatio = cw / ch;
+
+        if (canvasRatio > imgRatio) {
+          coverW = cw;
+          coverH = cw / imgRatio;
+          coverX = 0;
+          coverY = (ch - coverH) / 2;
+        } else {
+          coverH = ch;
+          coverW = ch * imgRatio;
+          coverX = (cw - coverW) / 2;
+          coverY = 0;
+        }
+
+        // Dynamically compute runway distances
+        heroScrubDist = Math.round(h * 3.2);   // 320vh smooth scrub for all 178 frames
+        aboutSlideDist = Math.round(h * 1.2);  // 120vh slide-up transition over last frame
+
+        const heroTotalTrack = heroScrubDist + aboutSlideDist;
+        heroTrack.style.height = `${heroTotalTrack}px`;
+
+        maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('cavern') || window.location.hash === '#cavern') {
+          const cavernTop = cavernSection ? cavernSection.offsetTop : (heroTotalTrack + h);
+          targetScroll = currentScroll = cavernTop;
+          window.scrollTo(0, targetScroll);
+        } else if (urlParams.has('stalactites')) {
+          const cavernTop = cavernSection ? cavernSection.offsetTop : (heroTotalTrack + h);
+          targetScroll = currentScroll = cavernTop - 250;
+          window.scrollTo(0, targetScroll);
+        } else if (isDirectAbout && currentScroll < 100) {
+          const aboutTop = aboutSection ? aboutSection.offsetTop : heroTotalTrack;
+          targetScroll = currentScroll = aboutTop;
+          window.scrollTo(0, targetScroll);
+        }
+
+        const heroProgress = Math.min(1, Math.max(0, currentScroll / heroScrubDist));
+        lastDrawnFrame = -1;
+        drawFrame(Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(heroProgress * (TOTAL_FRAMES - 1)))));
+      }
+
+      window.scrollToAbout = function() {
+        const aboutTop = aboutSection ? aboutSection.offsetTop : (heroScrubDist + aboutSlideDist);
+        targetScroll = currentScroll = aboutTop;
+        window.scrollTo(0, targetScroll);
+      };
+
+      window.scrollToCavern = function() {
+        if (cavernSection) {
+          targetScroll = currentScroll = cavernSection.offsetTop;
+          window.scrollTo(0, targetScroll);
+        }
+      };
+
+      function getAvailableFrame(index) {
+        if (images[index] && images[index].complete && images[index].naturalWidth > 0) {
+          return images[index];
+        }
+        for (let i = index - 1; i >= 0; i--) {
+          if (images[i] && images[i].complete && images[i].naturalWidth > 0) return images[i];
+        }
+        for (let i = index + 1; i < TOTAL_FRAMES; i++) {
+          if (images[i] && images[i].complete && images[i].naturalWidth > 0) return images[i];
+        }
+        return null;
+      }
+
+      function drawFrame(frameIndex) {
+        const clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, frameIndex));
+        if (clamped === lastDrawnFrame) return;
+
+        const img = getAvailableFrame(clamped);
+        if (img) {
+          ctx.drawImage(img, coverX, coverY, coverW, coverH);
+          lastDrawnFrame = clamped;
+        }
+      }
+
+      function preloadImages() {
+        for (let i = 0; i < TOTAL_FRAMES; i++) {
+          const img = new Image();
+          img.src = getFrameSrc(i);
+
+          if (i === 0) {
+            img.onload = () => {
+              if (lastDrawnFrame === -1) drawFrame(0);
+            };
+          }
+
+          images[i] = img;
+        }
+      }
+
+      // ------------------------------------------------------------------------
+      // Interactive 3D Cursor Tilt Engine (±4deg capped rotateX & rotateY)
+      // ------------------------------------------------------------------------
+      let targetRotX = 0;
+      let targetRotY = 0;
+      let currentRotX = 0;
+      let currentRotY = 0;
+
+      function onPointerMove(e) {
+        const nx = (e.clientX / window.innerWidth) * 2 - 1;
+        const ny = (e.clientY / window.innerHeight) * 2 - 1;
+        targetRotY = Math.max(-4, Math.min(4, nx * 4.0));
+        targetRotX = Math.max(-4, Math.min(4, -ny * 4.0));
+      }
+
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+
+      window.addEventListener('pointerleave', () => {
+        targetRotX = 0;
+        targetRotY = 0;
+      });
+
+      // ------------------------------------------------------------------------
+      // Smooth Scroll Handling (Wheel, Touch, Drag, Keys)
+      // ------------------------------------------------------------------------
+      window.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        let delta = e.deltaY;
+        if (e.deltaMode === 1) delta *= 32;
+        else if (e.deltaMode === 2) delta *= 500;
+
+        maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        targetScroll = Math.max(0, Math.min(maxScroll, targetScroll + delta));
+      }, { passive: false });
+
+      window.addEventListener('scroll', () => {
+        maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const nativeScroll = window.scrollY;
+        if (Math.abs(nativeScroll - currentScroll) > 8) {
+          targetScroll = nativeScroll;
+        }
+      }, { passive: true });
+
+      // Click & drag anywhere to scrub
+      let isDragging = false;
+      let dragStartY = 0;
+      let startScroll = 0;
+
+      window.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        if (e.target && e.target.closest && e.target.closest('.parchment-text-container, .highlight-card')) return;
+        isDragging = true;
+        dragStartY = e.clientY;
+        startScroll = targetScroll;
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const deltaY = dragStartY - e.clientY;
+        maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        targetScroll = Math.max(0, Math.min(maxScroll, startScroll + deltaY * 2.2));
+      });
+
+      window.addEventListener('pointerup', () => { isDragging = false; });
+      window.addEventListener('pointercancel', () => { isDragging = false; });
+
+      // Keyboard navigation
+      window.addEventListener('keydown', (e) => {
+        let step = 0;
+        if (e.key === 'ArrowDown' || e.key === ' ') step = 140;
+        else if (e.key === 'ArrowUp') step = -140;
+        else if (e.key === 'PageDown') step = window.innerHeight * 0.8;
+        else if (e.key === 'PageUp') step = -window.innerHeight * 0.8;
+        else if (e.key === 'Home') { targetScroll = 0; }
+        else if (e.key === 'End') { targetScroll = maxScroll; }
+
+        if (step !== 0) {
+          e.preventDefault();
+          maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+          targetScroll = Math.max(0, Math.min(maxScroll, targetScroll + step));
+        }
+      });
+
+      // ------------------------------------------------------------------------
+      // Hero Logo Zoom & Dissolve Logic
+      // ------------------------------------------------------------------------
+      const LERP_EASE = 0.12;
+      const APPROACH_START = 0.10;
+      const APPROACH_END = 0.26;
+
+      let lastLogoScale = -1;
+      let lastLogoOpacity = -1;
+      let isLogoHidden = false;
+
+      function updateHeroLogo(heroProgress) {
+        if (!logoContainer) return;
+
+        if (heroProgress < APPROACH_END) {
+          if (isLogoHidden) {
+            logoContainer.style.display = 'flex';
+            isLogoHidden = false;
+          }
+
+          const zoomT = Math.min(1, heroProgress / APPROACH_END);
+          const scale = 1 + zoomT * 1.7;
+
+          let opacity = 1;
+          if (heroProgress > APPROACH_START) {
+            const fadeT = (heroProgress - APPROACH_START) / (APPROACH_END - APPROACH_START);
+            const smoothFade = fadeT * fadeT * (3 - 2 * fadeT);
+            opacity = Math.max(0, 1 - smoothFade);
+          }
+
+          if (Math.abs(scale - lastLogoScale) > 0.004 || Math.abs(opacity - lastLogoOpacity) > 0.004) {
+            logoContainer.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(3)}) translateZ(0)`;
+            logoContainer.style.opacity = opacity.toFixed(3);
+            lastLogoScale = scale;
+            lastLogoOpacity = opacity;
+          }
+        } else if (!isLogoHidden) {
+          logoContainer.style.opacity = '0';
+          logoContainer.style.display = 'none';
+          isLogoHidden = true;
+        }
+      }
+
+      // ------------------------------------------------------------------------
+      // 3D About Section Parallax & Diorama Loop
+      // ------------------------------------------------------------------------
+      function updateAboutSection(timestamp) {
+        if (!aboutSection || !aboutWorld) return;
+
+        // Smooth cursor tilt interpolation
+        currentRotX += (targetRotX - currentRotX) * 0.08;
+        currentRotY += (targetRotY - currentRotY) * 0.08;
+
+        aboutWorld.style.transform = `rotateX(${currentRotX.toFixed(2)}deg) rotateY(${currentRotY.toFixed(2)}deg)`;
+
+        // Calculate relative parallax scroll offset when About is in/near viewport
+        const aboutRect = aboutSection.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        
+        // Progress: 0 when top enters bottom of screen, 1 when fully centered
+        const enterProgress = Math.max(0, Math.min(1.5, (viewH - aboutRect.top) / viewH));
+        const scrollDelta = (enterProgress - 1.0) * 80;
+
+        // Z-Plane 1: Sky background (0.12x scroll parallax)
+        if (layerSky) {
+          const skyY = scrollDelta * 0.12;
+          layerSky.style.transform = `translate3d(0, ${skyY.toFixed(1)}px, -100px) scale(1.15)`;
+        }
+
+        // Island Container Parallax
+        if (islandContainer) {
+          const islandRiseY = -Math.max(0, (1 - Math.min(1, enterProgress))) * 45 * 0.48;
+          islandContainer.style.transform = `translate3d(0, ${islandRiseY.toFixed(1)}px, 0)`;
+        }
+
+        // Z-Plane 4: Floating Bee (translateZ 45px + animated gentle hover)
+        if (layerBee) {
+          const beeHoverY = Math.sin(timestamp * 0.0032) * 8;
+          const beeHoverX = Math.cos(timestamp * 0.0022) * 5;
+          layerBee.style.transform = `translate3d(${beeHoverX.toFixed(1)}px, ${beeHoverY.toFixed(1)}px, 45px)`;
+        }
+
+        // Z-Plane 5: Headline (translateZ 50px)
+        if (layerHeadline) {
+          layerHeadline.style.transform = `translate3d(-50%, 0, 50px)`;
+        }
+
+        // Z-Plane 6: Pop-Out Parchment Card (translateZ 65px)
+        if (layerParchment) {
+          layerParchment.style.transform = `translate3d(-50%, -50%, 65px)`;
+        }
+      }
+
+      // ------------------------------------------------------------------------
+      // 3D Cavern Section Parallax & Diorama Loop
+      // ------------------------------------------------------------------------
+      function updateCavernSection(timestamp) {
+        if (!cavernSection || !cavernWorld) return;
+
+        // Cavern diorama cursor tilt
+        cavernWorld.style.transform = `rotateX(${currentRotX.toFixed(2)}deg) rotateY(${currentRotY.toFixed(2)}deg)`;
+
+        // Deep Bedrock Background subtle vertical scroll parallax (0.2x speed)
+        if (cavernBedrock) {
+          const cavernRect = cavernSection.getBoundingClientRect();
+          const viewH = window.innerHeight;
+          // Parallax: Bedrock moves at 0.2x relative scroll speed
+          const centerOffset = (cavernRect.top + cavernRect.height * 0.5) - (viewH * 0.5);
+          const bedrockParallaxY = -centerOffset * 0.2;
+          cavernBedrock.style.transform = `translate3d(0, ${bedrockParallaxY.toFixed(1)}px, -40px) scale(1.06)`;
+        }
+
+        // Cavern Side Walls Parallax (0.08x subtle shift)
+        if (cavernWalls) {
+          const cavernRect = cavernSection.getBoundingClientRect();
+          const viewH = window.innerHeight;
+          const centerOffset = (cavernRect.top + cavernRect.height * 0.5) - (viewH * 0.5);
+          const wallsParallaxY = -centerOffset * 0.08;
+          cavernWalls.style.transform = `translate3d(0, ${wallsParallaxY.toFixed(1)}px, 15px)`;
+        }
+      }
+
+      // ------------------------------------------------------------------------
+      // Master 60fps Animation Loop
+      // ------------------------------------------------------------------------
+      function renderLoop(timestamp) {
+        // Smooth scroll interpolation
+        const diff = targetScroll - currentScroll;
+        if (Math.abs(diff) > 0.05) {
+          currentScroll += diff * LERP_EASE;
+          window.scrollTo(0, Math.round(currentScroll));
+        } else {
+          currentScroll = targetScroll;
+        }
+
+        // Hero canvas scrub (Phase 1: 0 to heroScrubDist)
+        const heroProgress = Math.min(1, Math.max(0, currentScroll / heroScrubDist));
+        const frameIndex = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(heroProgress * (TOTAL_FRAMES - 1))));
+
+        if (heroSticky) {
+          if (currentScroll > heroScrubDist + aboutSlideDist + window.innerHeight * 1.5) {
+            heroSticky.style.display = 'none';
+          } else {
+            heroSticky.style.display = 'block';
+            drawFrame(frameIndex);
+            updateHeroLogo(heroProgress);
+          }
+        }
+
+        // Surface About 3D diorama
+        updateAboutSection(timestamp);
+
+        // Underground Cavern 3D diorama & bedrock parallax
+        updateCavernSection(timestamp);
+
+        requestAnimationFrame(renderLoop);
+      }
+
+      window.addEventListener('resize', updateDimensions, { passive: true });
+      window.addEventListener('orientationchange', updateDimensions, { passive: true });
+
+      updateDimensions();
+      preloadImages();
+      requestAnimationFrame(renderLoop);
+    })();
+  </script>
+</body>
+</html>
