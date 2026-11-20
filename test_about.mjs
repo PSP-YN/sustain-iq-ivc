@@ -21,6 +21,16 @@ async function run() {
   });
 
   ws.onopen = async () => {
+    // Reset to Desktop 1440x900
+    await send('Emulation.setDeviceMetricsOverride', {
+      width: 1440,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await send('Page.reload');
+    await new Promise(r => setTimeout(r, 1500));
+
     // 1. Capture About Surface section
     await send('Runtime.evaluate', { 
       expression: 'window.scrollToAbout();' 
