@@ -50,13 +50,26 @@ async function testMobile() {
     fs.writeFileSync('c:/sus/mobile_transition_stalactites.png', Buffer.from(transShot.data, 'base64'));
 
     // Capture Cavern section
-    await send('Runtime.evaluate', { expression: 'window.scrollToCavern();' });
+    const navResult = await send('Runtime.evaluate', { 
+      expression: `(() => {
+        window.scrollToCavern();
+        const el = document.getElementById("cavern");
+        const rect = el.getBoundingClientRect();
+        return {
+          scrollY: window.scrollY,
+          offsetTop: el.offsetTop,
+          rect: { top: rect.top, bottom: rect.bottom, height: rect.height }
+        };
+      })()`,
+      returnByValue: true
+    });
+    console.log('SCROLL TO CAVERN EVAL RESULT:', navResult.result.value);
     await new Promise(r => setTimeout(r, 800));
     shot = await send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync('c:/sus/mobile_3_cavern.png', Buffer.from(shot.data, 'base64'));
 
     // Capture Scroll further into Cavern banner
-    await send('Runtime.evaluate', { expression: 'window.scrollTo(0, document.getElementById("cavern").offsetTop + 350);' });
+    await send('Runtime.evaluate', { expression: 'targetScroll = currentScroll = document.getElementById("cavern").offsetTop + 350; window.scrollTo(0, targetScroll);' });
     await new Promise(r => setTimeout(r, 800));
     shot = await send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync('c:/sus/mobile_4_cavern_banner.png', Buffer.from(shot.data, 'base64'));
