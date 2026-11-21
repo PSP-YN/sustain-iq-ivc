@@ -730,6 +730,74 @@
     </div>
   </section>
 
+
+  <style>
+    /* Event information and responsive content added without changing the voxel artwork. */
+    .event-info{position:relative;z-index:8;background:#121216;color:#f7edcf;padding:clamp(2.5rem,7vw,6rem) clamp(1rem,5vw,5rem);font-family:'JetBrains Mono',monospace}
+    .event-info .section-inner{width:min(1120px,100%);margin:auto}
+    .event-info h2{font-family:'Press Start 2P',monospace;font-size:clamp(1.15rem,2.5vw,1.8rem);line-height:1.6;color:#ffd36b;margin:0 0 1.4rem}
+    .event-info h3{font-family:'Silkscreen',monospace;color:#ffd36b;font-size:clamp(.9rem,1.5vw,1.1rem);margin:0 0 .55rem}
+    .event-info p,.event-info li{font-size:clamp(.82rem,1.15vw,.98rem);line-height:1.7;color:#e7dfc9}
+    .event-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0 2.5rem}
+    .event-card{min-width:0;padding:1.15rem;border:1px solid #69502d;background:linear-gradient(145deg,#28231b,#171717);border-radius:10px;overflow-wrap:anywhere}
+    .event-card p{margin:0}.event-list{padding-left:1.25rem;display:grid;gap:.55rem}
+    .event-table-wrap{overflow-x:auto;border:1px solid #69502d;border-radius:10px;margin:1rem 0 2rem}
+    .event-table{border-collapse:collapse;width:100%;min-width:560px;font-size:.88rem}.event-table th,.event-table td{text-align:left;padding:.8rem;border-bottom:1px solid #51432d;vertical-align:top}.event-table th{color:#ffd36b;background:#292319}
+    .event-cta{display:inline-flex;align-items:center;justify-content:center;min-height:46px;margin-top:1rem;padding:.75rem 1.1rem;border-radius:7px;background:#f2c15e;color:#241707;text-decoration:none;font-weight:700}
+    .event-cta:focus-visible,.event-info a:focus-visible{outline:3px solid #fff;outline-offset:3px}
+    @media(max-width:768px){
+      body{touch-action:pan-y;user-select:text;-webkit-user-select:text}
+      #hero-sticky,canvas{height:100svh;height:100dvh}
+      .brand-logo{width:min(82vw,320px);max-width:82vw}
+      .layer-headline{font-size:clamp(.92rem,4.2vw,1.25rem);letter-spacing:.3px;line-height:1.45;top:2.5vh}
+      .layer-parchment-wrapper{top:22vh;width:min(91vw,350px)}
+      .parchment-text{font-size:clamp(.57rem,2.45vw,.68rem);line-height:1.42}
+      .island-container{width:175vw;min-width:0;height:48vh}
+      #cavern{min-height:auto;padding-bottom:12vh}
+      .cavern-heading{padding-top:clamp(90px,15vh,150px);font-size:clamp(1rem,5vw,1.45rem)}
+      .cavern-banner-wrapper{width:min(94vw,420px)}
+      .highlights-grid{grid-template-columns:1fr;gap:.65rem}
+      .highlight-card{padding:.7rem .75rem}
+      .highlight-title{font-size:.72rem}.highlight-desc{font-size:.67rem;line-height:1.5}
+      .event-info{padding:2.6rem 1rem}.event-grid{grid-template-columns:1fr;gap:.75rem}
+      .event-info h2{font-size:1.05rem}.event-info p,.event-info li{font-size:.86rem}
+      .event-card{padding:1rem}
+    }
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.highlight-card{transition:none}}
+  </style>
+
+  <section class="event-info" id="domains"><div class="section-inner">
+    <h2>Choose Your Challenge Domain</h2>
+    <p>Build a practical, measurable solution to a real sustainability challenge. Official case studies will be released on 1 December 2026; the domain descriptions below are the published tracks, not invented problem statements.</p>
+    <div class="event-grid">
+      <article class="event-card"><h3>01 · AI, Data Science &amp; Digital Innovation</h3><p>Use intelligent systems, data and digital tools to improve sustainability outcomes.</p></article>
+      <article class="event-card"><h3>02 · IoT, Embedded Systems &amp; Smart Technologies</h3><p>Connect sensors, devices and embedded systems to monitor and improve real-world operations.</p></article>
+      <article class="event-card"><h3>03 · Clean Energy &amp; Sustainable Engineering</h3><p>Develop engineering approaches that support cleaner energy and resource efficiency.</p></article>
+      <article class="event-card"><h3>04 · Smart Infrastructure &amp; Environmental Sustainability</h3><p>Improve the resilience, efficiency and environmental performance of built systems.</p></article>
+    </div>
+    <h2 id="journey">How the Hackathon Works</h2>
+    <ol class="event-list">
+      <li>Register a team of 3–4 students between 16 and 23 November 2026. Students from all branches may participate; mixed-college teams are allowed.</li>
+      <li>Submit the preliminary PPT by 23 November 2026, 11:59 PM IST.</li>
+      <li>Shortlisting is scheduled around 25–26 November. Up to 20 teams per domain (80 total) advance.</li>
+      <li>Shortlisted teams confirm their final-round participation by paying ₹999 per team.</li>
+      <li>Official case studies release on 1 December. After an approximately five-hour review window, teams select a case on a first-come, first-served basis. Each case can be selected by a maximum of two teams.</li>
+      <li>Build and present your solution on-site at VVCE, Mysuru, on 3–4 December.</li>
+    </ol>
+    <h2 id="schedule">Event Schedule</h2>
+    <div class="event-table-wrap"><table class="event-table"><thead><tr><th>Date</th><th>Time</th><th>Activity</th></tr></thead><tbody>
+      <tr><td>3 Dec</td><td>9:00 AM</td><td>Check-in</td></tr><tr><td>3 Dec</td><td>10:00 AM</td><td>Inauguration and kickoff</td></tr><tr><td>3 Dec</td><td>1:00 PM</td><td>Mentoring checkpoint 1 (mandatory)</td></tr><tr><td>3 Dec</td><td>5:00 PM</td><td>Judging round 1 (mandatory)</td></tr><tr><td>3 Dec</td><td>9:00 PM</td><td>Mentoring checkpoint 2 (mandatory)</td></tr><tr><td>4 Dec</td><td>9:00 AM</td><td>Final judging (mandatory)</td></tr><tr><td>4 Dec</td><td>10:00 AM</td><td>24-hour build window concludes</td></tr><tr><td>4 Dec</td><td>By 1:00 PM</td><td>Results, awards and closing (timing subject to final confirmation)</td></tr>
+    </tbody></table></div>
+    <h2 id="prizes">Prize Pool · ₹60,000</h2>
+    <p>Each of the four domains has three award positions. The published award amounts per domain are:</p>
+    <div class="event-grid"><article class="event-card"><h3>1st Place</h3><p>₹8,000</p></article><article class="event-card"><h3>2nd Place</h3><p>₹5,000</p></article><article class="event-card"><h3>3rd Place</h3><p>₹2,000</p></article><article class="event-card"><h3>Across all domains</h3><p>12 winning teams · ₹60,000 total</p></article></div>
+    <h2 id="rules">Participation Rules</h2>
+    <ul class="event-list"><li>Teams must have 3–4 members and register under one challenge domain.</li><li>Original work is required. AI tools, APIs, libraries and pretrained models are permitted; disclose their use in your PPT.</li><li>Bring required laptops, sensors and equipment. Additional electronics may be available at cost.</li><li>Mentoring and judging checkpoints are mandatory.</li><li>Final submission must include a PPT, source repository, deployed link where applicable, and supporting documentation.</li><li>Unsafe wiring, exposed batteries and hazardous materials are prohibited. Clearly disclose limitations when using simulations.</li><li>Meals provided during the event: lunch, snacks, dinner, midnight snacks and breakfast.</li></ul>
+    <h2 id="contact">Venue &amp; Contact</h2>
+    <div class="event-grid"><article class="event-card"><h3>Venue</h3><p>Sports Complex, Vidyavardhaka College of Engineering (VVCE), Mysuru, Karnataka.</p></article><article class="event-card"><h3>Organizers</h3><p>Innovators &amp; Visionaries Club (IVC), VVCE, in collaboration with inunity.</p></article><article class="event-card"><h3>Moksh · Marketing Lead</h3><p><a href="tel:+918310353103">+91 83103 53103</a></p></article><article class="event-card"><h3>Parinitha · Secretary</h3><p><a href="tel:+916361455193">+91 63614 55193</a></p></article></div>
+    <p>For official updates and registration, use the event's published channels. Screening dates and the closing ceremony timing may be updated by the organizers.</p>
+  </div></section>
+
   <!-- ========================================================================
        ENGINE SCRIPT: Scroll Controller, Canvas Scrub, 3D Tilt & Parallax Engine
        ======================================================================== -->
